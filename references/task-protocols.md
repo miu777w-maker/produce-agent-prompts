@@ -55,9 +55,44 @@
 
 知识缺口不阻止完成其他范围和报告，但受影响结论标记 `uncertain`/`blocked-by-knowledge`，不得判为通过，并同步输出可执行的补全请求。
 
+### 六项门禁的 Inspection 视角
+
+| 门禁 | Inspection 判断 |
+| --- | --- |
+| 运行环境 | 现有 prompt 声明或依赖的消息、变量、状态、工具、输出和异常是否有运行时证据；无代码/schema 证据时标待核验，不判可接入通过。 |
+| 时机上下文与概念绑定 | 每个指代、字段和上游概念是否在目标调用时机真实可见；需要但未供给时归因到运行时/架构缺口。 |
+| 业务与角色 | 身份、目标、行为和边界是否忠实于权威知识，并保留非最终、例外和范围限定。 |
+| 职责与可见性 | 应有清单是否完整，职责是否错位、重叠或遗漏，局部 Agent 是否读取无关信息，重复是否有运行时理由。 |
+| 约束与注意力 | 高风险约束是否位于有效载体和时机；anchor/reminder 是否有真实钩子、必要性和漂移测试。 |
+| 知识疑点 | 现有 prompt 是否误读、遗漏或新增无来源规则；知识本身冲突时区分知识问题与生成问题。 |
+
+门禁级别使用 `pass`、`warning`、`fail`、`blocked`：`blocked` 表示检查动作已完成，但关键结论等待知识或运行时证据，不等于发现确定错误。
+
+### 已有 eval 审查
+
+逐项检查：
+
+- prompt 规则变化是否同步到 eval，eval 是否仍在评旧规则；
+- 确定性可验证项与 judge 主观项是否分开；
+- 条目是否正交，是否重复计分或漏掉关键失败面；
+- 正常、边界、模糊、冲突、缺失、工具、对抗、长对话、组合和上下游案例是否按风险覆盖；
+- 一票否决是否只用于破坏正确性、安全或运行契约的行为；
+- reminder/anchor 是否有针对重注入与漂移效果的测试；
+- eval 所需工具调用、状态和运行日志是否能由外部环境提供。
+
 ### 交付和状态
 
-报告至少包括证据边界、应有体系、清单差异、六项门禁、静态集成、分级发现、归因、补全任务、状态和后续入口。状态使用：`inspection-incomplete`、`inspection-failed`、`inspection-static-passed`、`awaiting-external-evaluation`、`external-failed`、`external-passed`。Inspection 不产生 `final-ready`，不自动进入 Revision。
+报告至少包括证据边界、应有体系、清单差异、六项门禁、eval 审查、静态集成、分级发现、归因、补全任务、状态和后续入口。
+
+状态汇聚：
+
+- `inspection-incomplete`：约定范围或必要检查动作尚未完成；
+- `inspection-blocked`：必要检查已执行，但至少一个关键门禁等待知识、代码、schema 或运行时证据，不能判静态通过；
+- `inspection-failed`：存在有充分证据的关键错误；即使同时有 blocked 项，整体仍为 failed，并另列阻塞；
+- `inspection-static-passed`：范围、清单、六项门禁、eval 和静态集成均完成且无关键 fail/blocked；
+- 静态通过后才能进入 `awaiting-external-evaluation`，收到证据后使用 `external-failed`/`external-passed`。
+
+Inspection 不产生 `final-ready`，不自动进入 Revision。
 
 ## Creation
 

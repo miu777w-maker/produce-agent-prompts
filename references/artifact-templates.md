@@ -59,6 +59,7 @@
 ## 知识缺口与补全任务
 
 ## 当前状态与允许声称的结论
+- inspection-incomplete / inspection-blocked / inspection-failed / inspection-static-passed / awaiting-external-evaluation / external-failed / external-passed
 
 ## 后续入口
 - 补知识 / 启动 Revision / 补 eval / 核查运行时 / 外部评测
@@ -90,16 +91,32 @@
 - 主线回归点：阶段 3 知识发现与覆盖
 ```
 
-## 5. 六项核心门禁摘要
+需要交给不同责任方时，每项请求单独保存为 Markdown 文件，不只放在 Inspection 报告附录。
 
-| 门禁 | 生产前信息来源 | 显式产物路径 | 状态 | 失败/警告 | 回退阶段 |
+## 5. 运行时工程取证请求
+
+```markdown
+# Runtime Evidence Request
+- 关联任务与受影响 prompts：
+- 当前已知设计及知识来源：
+- 无法确认的运行时供给：消息 / 变量 / 状态 / 历史 / 工具 / 输出 / 钩子 / 异常 / 版本
+- 为什么阻塞可接入或静态结论：
+- 需要返回：文件路径、关键符号、schema、装配/注入/聚合代码、测试和版本证据
+- 建议回答方：后端 Agent / 前端 Agent / 运行平台负责人
+- 证据建议保存位置：
+- 回填后重跑的门禁与静态检查：
+```
+
+## 6. 六项核心门禁摘要
+
+| 门禁 | 生产前信息来源 | 显式产物路径 | 状态 | 失败/警告/阻塞 | 回退阶段 |
 | --- | --- | --- | --- | --- | --- |
-| runtime-environment |  |  | pass/warning/fail |  |  |
-| execution-context |  |  | pass/warning/fail |  |  |
-| business-role |  |  | pass/warning/fail |  |  |
-| responsibility-visibility |  |  | pass/warning/fail |  |  |
-| attention-plan |  |  | pass/warning/fail |  |  |
-| knowledge-conflicts |  |  | pass/warning/fail |  |  |
+| runtime-environment |  |  | pass/warning/blocked/fail |  |  |
+| execution-context |  |  | pass/warning/blocked/fail |  |  |
+| business-role |  |  | pass/warning/blocked/fail |  |  |
+| responsibility-visibility |  |  | pass/warning/blocked/fail |  |  |
+| attention-plan |  |  | pass/warning/blocked/fail |  |  |
+| knowledge-conflicts |  |  | pass/warning/blocked/fail |  |  |
 
 六项详细产物分别使用下列字段。
 
@@ -158,14 +175,14 @@
 
 未发现时写：`已检查，未发现影响本次任务的明显知识问题。`
 
-## 6. prompt 候选清单与架构
+## 7. prompt 候选清单与架构
 
 | ID | 类型 | 执行单元 | 加载时机 | 唯一职责 | 不承载内容 | 独立理由 | 所需知识/工具 | 对应 eval | 来源 | 置信度/待确认 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 同时保存原始清单和 Skill 建议清单，避免建议覆盖需求。
 
-## 7. prompt 单元规格
+## 8. prompt 单元规格
 
 ```markdown
 # Prompt Unit: <id>
@@ -185,7 +202,7 @@
 - 单元校验状态：
 ```
 
-## 8. eval 单元规格
+## 9. eval 单元规格
 
 ```markdown
 # Eval Unit: <prompt-id>
@@ -203,12 +220,12 @@
 - 结果证据路径：
 ```
 
-## 9. 运行时集成契约
+## 10. 运行时集成契约
 
 | Prompt ID | 执行单元/触发 | role/顺序 | 动态变量、状态、历史 | 工具/schema | 输出/parser | anchor 钩子 | 异常路径 | prompt/schema/code/eval 版本 | 来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-## 10. 外部评测交接包
+## 11. 外部评测交接包
 
 ```markdown
 # External Evaluation Handoff
@@ -223,11 +240,11 @@
 - 当前状态：awaiting-external-evaluation
 ```
 
-## 11. 检查点与分支记录
+## 12. 检查点与分支记录
 
 ```markdown
 # Task Checkpoint
-- 原始任务标识与入口模式：
+- 原始任务标识与任务流程：
 - 当前主线阶段/状态：
 - 本阶段输入：
 - 已确认判断：
@@ -238,7 +255,7 @@
 - 主线回归点：
 ```
 
-## 12. 最终交付清单
+## 13. 最终交付清单
 
 ```markdown
 - [ ] prompts 与 evals 成对
@@ -253,7 +270,7 @@
 - 最终状态：
 ```
 
-## 13. 机器校验清单 `prompt-package.json`
+## 14. 机器校验清单 `prompt-package.json`
 
 把路径写成相对于该 JSON 所在目录的路径。来源在外部知识库时，使用相对于 `--knowledge-root` 的路径。
 

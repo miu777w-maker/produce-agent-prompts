@@ -21,6 +21,17 @@
 
 `validate_prompt_package.py` 只适用于已经形成 `prompt-package.json` 的正式产物包。检验已有草稿且不存在 manifest 时，不把脚本无法启动误称为 prompt 失败；记录“尚未形成可机器校验的正式包”，并人工/工具执行文件配对、来源、占位符、工具名、版本等当前能够确定的轻量检查。
 
+## 运行时证据不足时
+
+先完成文档层可判断项，再将运行时依赖按共享契约分组，不为每个 prompt 重复堆叠同一条 warning。可按消息装配、动态状态/历史、工具 schema、输出/parser、reminder/anchor 钩子、异常/聚合逻辑和版本对应分组。
+
+- 有设计知识但无实现证据：标记“已设计/待代码核验”；
+- 业务上需要某输入或工具，但无法确认目标 Agent 在对应时机可见：关键门禁标 `blocked`，不得写“可接入已验证”；
+- 已有证据证明未注入、未注册或不一致：标 `fail` 并归因运行时/code/schema；
+- 生成一份统一工程取证请求，列出受影响 prompts，要求返回文件路径、关键符号、schema、装配/注入/聚合代码、测试和版本证据；
+- 面向项目人员的业务知识补全与面向代码 Agent 的运行时取证分成不同文件；
+- 证据返回后回到受影响门禁和静态集成，不从头重跑无关范围。
+
 ## 阶段和单元检查
 
 每个 prompt 单元检查：
@@ -95,6 +106,6 @@
 - `external-passed`：外部关键路径通过，但尚待最终交付确认；
 - `final-ready`：外部通过且最终交付确认完成。
 
-Inspection 使用独立状态：`inspection-incomplete`、`inspection-failed`、`inspection-static-passed`，静态通过后可沿用 `awaiting-external-evaluation`、`external-failed`、`external-passed`；Inspection 本身不产生 `final-ready`。
+Inspection 使用独立状态：`inspection-incomplete`、`inspection-blocked`、`inspection-failed`、`inspection-static-passed`，静态通过后可沿用 `awaiting-external-evaluation`、`external-failed`、`external-passed`；Inspection 本身不产生 `final-ready`。
 
 维护追溯链：`原始需求 → 知识来源 → prompt 规则 → eval 条目 → 外部证据`。

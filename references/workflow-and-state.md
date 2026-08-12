@@ -104,6 +104,8 @@
 阶段状态：`not-started`、`in-progress`、`waiting-for-knowledge`、`passed`。  
 交付状态：`design-not-ready`、`static-failed`、`awaiting-external-evaluation`、`external-failed`、`external-passed`、`final-ready`。
 
+Inspection 使用 `inspection-incomplete`、`inspection-blocked`、`inspection-failed`、`inspection-static-passed`，不要套用 Creation 的 `design-not-ready` 表达已完成但待证据的审查。
+
 每个检查点记录：
 
 - 原始任务标识和任务流程；
