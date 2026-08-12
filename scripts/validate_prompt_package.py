@@ -3,6 +3,11 @@
 
 This script checks package structure and registrations only. It does not run or
 judge model behavior.
+
+Prompt units and eval scenarios are validated INDEPENDENTLY. The script does NOT
+require prompt/eval pairing, equal counts, or matching versions — prompt and eval
+are separate production tracks (package_version 2). The legacy paired ``units``
+field is rejected.
 """
 
 from __future__ import annotations
@@ -16,6 +21,7 @@ from typing import Any
 
 
 REQUIRED_ARTIFACTS = {
+    "requirements_scope",
     "runtime_environment",
     "execution_context",
     "business_role",
@@ -28,6 +34,15 @@ REQUIRED_ARTIFACTS = {
 ALLOWED_STATUSES = {
     "design-not-ready",
     "static-failed",
+    "creation-revision-required",
+    "prompt-static-passed",
+    "awaiting-external-evaluation",
+    "external-failed",
+    "external-passed",
+    "final-ready",
+}
+# Delivery statuses that imply eval scenarios must already exist.
+EVAL_REQUIRED_STATUSES = {
     "awaiting-external-evaluation",
     "external-failed",
     "external-passed",
@@ -120,6 +135,24 @@ def extract_placeholders(text: str) -> set[str]:
     return found
 
 
+def check_sources(
+    unit: dict[str, Any],
+    label: str,
+    knowledge_root: Path | None,
+    report: Report,
+) -> None:
+    sources = unit.get("sources", [])
+    if not isinstance(sources, list) or not all(isinstance(x, str) for x in sources):
+        report.fail(f"{label}.sources must be a list of strings")
+    elif not sources:
+        report.fail(f"{label} must declare at least one knowledge source")
+    elif knowledge_root is None:
+        report.warn(f"{label} sources declared but not checked; provide --knowledge-root")
+    else:
+        for source in sources:
+            check_file(knowledge_root.resolve(), source, f"{label}.source", report)
+
+
 def validate(manifest_path: Path, knowledge_root: Path | None) -> Report:
     report = Report()
     data = load_json(manifest_path, report)
@@ -135,6 +168,7 @@ def validate(manifest_path: Path, knowledge_root: Path | None) -> Report:
     status = data.get("delivery_status")
     if status not in ALLOWED_STATUSES:
         report.fail(f"delivery_status must be one of {sorted(ALLOWED_STATUSES)}")
+        status = None
     else:
         report.passed(f"delivery_status is valid: {status}")
 
@@ -163,45 +197,56 @@ def validate(manifest_path: Path, knowledge_root: Path | None) -> Report:
     registered_variables = set(variables)
     registered_tools = set(tools)
 
-    units = data.get("units")
-    if not isinstance(units, list) or not units:
-        report.fail("units must be a non-empty list")
-        return report
+    # Reject the legacy paired-units format (prompt/eval 1:1 was a design error).
+    if "units" in data:
+        report.fail(
+            "legacy 'units' field with paired prompt/eval is deprecated; "
+            "split into prompt_units and eval_scenarios (package_version 2)"
+        )
 
-    seen_ids: set[str] = set()
-    for index, unit in enumerate(units):
-        label = f"units[{index}]"
+    # --- prompt_units: required, independently validated, no eval pairing ---
+    prompt_units = data.get("prompt_units")
+    if not isinstance(prompt_units, list) or not prompt_units:
+        report.fail("prompt_units must be a non-empty list")
+        prompt_units = []
+
+    seen_prompt_ids: set[str] = set()
+    file_fields: dict[str, list[str]] = {}
+    for index, unit in enumerate(prompt_units):
+        index_label = f"prompt_units[{index}]"
         if not isinstance(unit, dict):
-            report.fail(f"{label} must be an object")
+            report.fail(f"{index_label} must be an object")
             continue
         unit_id = unit.get("id")
         if not isinstance(unit_id, str) or not unit_id.strip():
+            label = index_label
             report.fail(f"{label}.id must be a non-empty string")
-            unit_id = label
-        elif unit_id in seen_ids:
-            report.fail(f"Duplicate unit id: {unit_id}")
+        elif unit_id in seen_prompt_ids:
+            label = index_label
+            report.fail(f"Duplicate prompt_units id: {unit_id}")
         else:
-            seen_ids.add(unit_id)
+            seen_prompt_ids.add(unit_id)
+            label = f"prompt:{unit_id}"
 
-        prompt_path = check_file(package_root, unit.get("prompt"), f"{unit_id}.prompt", report)
-        check_file(package_root, unit.get("eval"), f"{unit_id}.eval", report)
+        prompt_path = check_file(package_root, unit.get("prompt"), f"{label}.prompt", report)
 
-        version = unit.get("version")
-        eval_version = unit.get("eval_version")
-        if not isinstance(version, str) or not isinstance(eval_version, str):
-            report.fail(f"{unit_id} must declare string version and eval_version")
-        elif version != eval_version:
-            report.fail(f"{unit_id} prompt/eval version mismatch: {version} != {eval_version}")
-        else:
-            report.passed(f"{unit_id} prompt/eval versions match")
+        if not isinstance(unit.get("version"), str):
+            report.fail(f"{label}.version must be a string")
+
+        file_field = unit.get("file_field")
+        if file_field is not None:
+            if not isinstance(file_field, str) or not file_field.strip():
+                report.fail(f"{label}.file_field must be a non-empty string when present")
+            else:
+                file_fields.setdefault(file_field.strip(), []).append(label)
 
         unit_tools = unit.get("tools", [])
         if not isinstance(unit_tools, list) or not all(isinstance(x, str) for x in unit_tools):
-            report.fail(f"{unit_id}.tools must be a list of strings")
+            report.fail(f"{label}.tools must be a list of strings")
         else:
             unknown_tools = set(unit_tools) - registered_tools
             if unknown_tools:
-                report.fail(f"{unit_id} uses unregistered tools: {sorted(unknown_tools)}")
+                report.fail(f"{label} uses unregistered tools: {sorted(unknown_tools)}")
 
         if prompt_path:
             try:
@@ -211,20 +256,63 @@ def validate(manifest_path: Path, knowledge_root: Path | None) -> Report:
             else:
                 unknown_variables = placeholders - registered_variables
                 if unknown_variables:
-                    report.fail(f"{unit_id} uses unregistered variables: {sorted(unknown_variables)}")
+                    report.fail(f"{label} uses unregistered variables: {sorted(unknown_variables)}")
                 elif placeholders:
-                    report.passed(f"{unit_id} placeholders are registered")
+                    report.passed(f"{label} placeholders are registered")
 
-        sources = unit.get("sources", [])
-        if not isinstance(sources, list) or not all(isinstance(x, str) for x in sources):
-            report.fail(f"{unit_id}.sources must be a list of strings")
-        elif not sources:
-            report.fail(f"{unit_id} must declare at least one knowledge source")
-        elif knowledge_root is None:
-            report.warn(f"{unit_id} sources declared but not checked; provide --knowledge-root")
+        check_sources(unit, label, knowledge_root, report)
+
+    # --- eval_scenarios: optional track, independently validated ---
+    eval_scenarios = data.get("eval_scenarios")
+    if eval_scenarios is None:
+        eval_scenarios = []
+    if not isinstance(eval_scenarios, list):
+        report.fail("eval_scenarios must be a list when present")
+        eval_scenarios = []
+
+    seen_eval_ids: set[str] = set()
+    for index, unit in enumerate(eval_scenarios):
+        index_label = f"eval_scenarios[{index}]"
+        if not isinstance(unit, dict):
+            report.fail(f"{index_label} must be an object")
+            continue
+        unit_id = unit.get("id")
+        if not isinstance(unit_id, str) or not unit_id.strip():
+            label = index_label
+            report.fail(f"{label}.id must be a non-empty string")
+        elif unit_id in seen_eval_ids:
+            label = index_label
+            report.fail(f"Duplicate eval_scenarios id: {unit_id}")
         else:
-            for source in sources:
-                check_file(knowledge_root.resolve(), source, f"{unit_id}.source", report)
+            seen_eval_ids.add(unit_id)
+            label = f"eval:{unit_id}"
+
+        check_file(package_root, unit.get("eval"), f"{label}.eval", report)
+
+        scope = unit.get("scope")
+        if not isinstance(scope, str) or not scope.strip():
+            report.fail(f"{label}.scope must describe the tested Agent behavior")
+
+        if not isinstance(unit.get("version"), str):
+            report.fail(f"{label}.version must be a string")
+
+        check_sources(unit, label, knowledge_root, report)
+
+    # Status ↔ eval presence: a status that implies eval readiness requires evals.
+    if status in EVAL_REQUIRED_STATUSES and not eval_scenarios:
+        report.fail(
+            f"delivery_status {status} requires non-empty eval_scenarios "
+            "(prompt and eval are independent; evals must exist before external evaluation)"
+        )
+
+    # file_field uniqueness: a shared file_field may indicate an accidental merge of
+    # files the knowledge base defines separately.
+    for field, labels in file_fields.items():
+        if len(labels) > 1:
+            report.warn(
+                f"file_field '{field}' is shared by {labels}; verify this is not an "
+                "accidental merge of files the knowledge base defines separately"
+            )
 
     return report
 

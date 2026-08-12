@@ -3,7 +3,9 @@
 ## 目录
 
 - 校验边界
-- 阶段和单元检查
+- 运行时证据不足时
+- Prompt 单元检查
+- Eval 场景与单元检查
 - 行为案例设计
 - 静态系统集成
 - 外部评测交接
@@ -13,26 +15,30 @@
 
 区分三类判断：
 
-1. **确定性检查**：文件、字段、路径、来源、占位符、工具名、schema、结构、数量和 prompt/eval 配对；可由脚本或明确规则判断。
+1. **确定性检查**：文件、字段、路径、来源、占位符、工具名、schema、结构和数量。Prompt 与 Eval **各自独立校验**，不要求 prompt 与 eval 配对、数量相等或版本匹配。
 2. **行为评测**：需要真实模型、工具和运行时，检查取向、边界、语气、漂移、对抗和组合行为。Skill 只设计 eval 与交接。
 3. **人工决策**：目标范围、prompt 架构和最终交付确认，以及知识缺口中的业务决策。
 
 没有真实执行证据时不要写“行为通过”。
 
-`validate_prompt_package.py` 只适用于已经形成 `prompt-package.json` 的正式产物包。检验已有草稿且不存在 manifest 时，不把脚本无法启动误称为 prompt 失败；记录“尚未形成可机器校验的正式包”，并人工/工具执行文件配对、来源、占位符、工具名、版本等当前能够确定的轻量检查。
+`validate_prompt_package.py` 只适用于已经形成 `prompt-package.json` 的正式产物包。检验已有草稿且不存在 manifest 时，不把脚本无法启动误称为失败；记录“尚未形成可机器校验的正式包”，并人工/工具执行文件配对、来源、占位符、工具名、版本等当前能够确定的轻量检查。
 
 ## 运行时证据不足时
 
+按缺失层次分级（与 `core-production-gates.md` 一致）：
+
+- **阻断（业务语义层）**：目标、角色、职责、门禁判定标准等业务语义层契约缺失，且知识库无法补全 → 停止生成，输出补全请求。
+- **warning（工程实现细节）**：工具 schema 精确字段、注入钩子代码、数据结构实现细节等，不影响 prompt 文本语义 → 标“已设计/待代码核验”，不阻塞生成，但相关门禁不得写 `pass`。
+
 先完成文档层可判断项，再将运行时依赖按共享契约分组，不为每个 prompt 重复堆叠同一条 warning。可按消息装配、动态状态/历史、工具 schema、输出/parser、reminder/anchor 钩子、异常/聚合逻辑和版本对应分组。
 
-- 有设计知识但无实现证据：标记“已设计/待代码核验”；
 - 业务上需要某输入或工具，但无法确认目标 Agent 在对应时机可见：关键门禁标 `blocked`，不得写“可接入已验证”；
 - 已有证据证明未注入、未注册或不一致：标 `fail` 并归因运行时/code/schema；
 - 生成一份统一工程取证请求，列出受影响 prompts，要求返回文件路径、关键符号、schema、装配/注入/聚合代码、测试和版本证据；
 - 面向项目人员的业务知识补全与面向代码 Agent 的运行时取证分成不同文件；
 - 证据返回后回到受影响门禁和静态集成，不从头重跑无关范围。
 
-## 阶段和单元检查
+## Prompt 单元检查
 
 每个 prompt 单元检查：
 
@@ -41,14 +47,24 @@
 - 运行时真实性：触发、消息、状态、工具、输出和异常真实可用；
 - 职责与披露：只承担本职，信息最小充分，重复有理由；
 - 指令可执行性：目标、步骤、边界、缺失/冲突行为和输出明确；
-- 注意力与表达：关键约束位置合理，语气与行为契约一致；
-- 评测完整性：每条必须/不得有对应检查，高风险项设合理否决条件。
+- 注意力与表达：关键约束位置合理，语气与行为契约一致。
 
 失败时回到最早产生错误的阶段；不要只润色末端文案。
 
+## Eval 场景与单元检查
+
+Eval 以**完整 Agent 业务行为**为被测对象，独立从知识库推导（见 `task-protocols.md` 的 Eval Creation）。每个 eval 场景检查：
+
+- 独立可追溯：场景与 rubric 可独立追溯到知识库，未以 prompt 为隐性知识源；
+- 被测对象正确：评测的是完整 Agent 业务行为/系统能力，而非单段 prompt 文本；
+- 失败面覆盖：场景按失败面选择，覆盖正常/边界/模糊/冲突/缺失/工具/对抗/长对话/组合/上下游；
+- 正交与无重复计分：可验证项与 judge 项分开，条目正交；
+- 一票否决合理：只用于破坏正确性、安全或运行契约的行为；
+- 可执行性：所需工具调用、状态和运行日志能由外部环境提供。
+
 ## 行为案例设计
 
-根据失败面选择而非机械复制：
+用于 Eval Creation 的场景设计。根据失败面选择而非机械复制：
 
 - 正常：典型输入和预期路径；
 - 边界：相邻类别和临界状态；
@@ -65,7 +81,7 @@
 
 ## 静态系统集成
 
-为每个关键执行时机按真实顺序拼出完整上下文，检查：
+**Prompt 静态集成**：为每个关键执行时机按真实顺序拼出完整上下文，检查：
 
 1. system、task、reminder/anchor 是否冲突；
 2. 多次出现的规则是否有清晰优先级和重复理由；
@@ -74,13 +90,15 @@
 5. 上游输出是否满足下游输入；
 6. 并行任务是否错误共享信息；
 7. 超时、拒绝、异常和解析失败是否与程序契约一致；
-8. prompts、evals、来源和版本是否一一对应。
+8. “预期文件清单 ↔ 实际文件”是否一一对应（少文件、合并文件、多造文件、错目录、自行命名）。
 
-静态通过后状态为 `awaiting-external-evaluation`，不是最终通过。
+**Eval 静态集成**：检查 eval 内部一致性、场景覆盖、工具/状态可供给性、来源可追溯性。
+
+Prompt 静态通过后状态为 `prompt-static-passed`（eval 尚未就绪），不是最终通过。
 
 ## 外部评测交接
 
-交接包至少包括：
+仅在 Eval Creation 完成、eval 准备执行时生成交接包。交接包至少包括：
 
 - 目标系统、范围和版本；
 - prompts、evals、schema 和运行时契约路径；
@@ -101,11 +119,18 @@
 
 - `design-not-ready`：目标、知识或架构未就绪；
 - `static-failed`：确定性或静态集成失败；
-- `awaiting-external-evaluation`：静态通过，等待执行；
+- `creation-revision-required`：静态检查发现体系、清单或门禁问题，需回到架构阶段，不得乐观跳到 `awaiting-external-evaluation`；
+- `prompt-static-passed`：Prompt 静态通过，但 Eval 尚未独立就绪；
+- `awaiting-external-evaluation`：Eval 已就绪，等待执行；
 - `external-failed`：有可追溯外部失败；
 - `external-passed`：外部关键路径通过，但尚待最终交付确认；
-- `final-ready`：外部通过且最终交付确认完成。
+- `final-ready`：Prompt 与 Eval 外部关键路径均通过且最终交付确认完成。
 
-Inspection 使用独立状态：`inspection-incomplete`、`inspection-blocked`、`inspection-failed`、`inspection-static-passed`，静态通过后可沿用 `awaiting-external-evaluation`、`external-failed`、`external-passed`；Inspection 本身不产生 `final-ready`。
+Prompt Inspection 使用独立状态：`inspection-incomplete`、`inspection-blocked`、`inspection-failed`、`inspection-static-passed`，静态通过后可沿用 `awaiting-external-evaluation`、`external-failed`、`external-passed`；Inspection 本身不产生 `final-ready`。
 
-维护追溯链：`原始需求 → 知识来源 → prompt 规则 → eval 条目 → 外部证据`。
+维护两条独立追溯链：
+
+- Prompt 侧：`原始需求 → 知识来源 → prompt 规则`；
+- Eval 侧：`评测目标 → 知识来源 → eval 场景 → 外部证据`。
+
+不得形成 `eval → prompt` 的事实依赖。

@@ -1,21 +1,21 @@
 # 产物模板
 
-只复制当前阶段需要的模板。允许按项目知识库契约调整字段名，但不得删除核心门禁、来源、状态和版本信息。
+只复制当前阶段需要的模板。允许按项目知识库契约调整字段名，但不得删除核心门禁、来源、状态和版本信息。Prompt 与 Eval 各自独立成件，不要求配对。
 
 ## 1. 任务目标与范围确认
 
 ```markdown
-# Prompt 生产任务
+# Prompt/Eval 生产任务
 - 原始请求：
-- 任务流程：Inspection / Creation / Revision / Eval-only
-- Creation 清单来源：人员给定 / 目标驱动发现 / 不适用
+- 任务流程：Prompt Inspection / Prompt Creation / Prompt Revision / Eval Creation
+- Prompt Creation 清单来源：人员给定 / 目标驱动发现 / 不适用
 - prompt 生产时是否已有清单：是 / 否 / 不适用
 - 检验范围：单 prompt / 局部组合 / 整套系统 / 不适用
 - 是否授权修改已有产物：是 / 否
 - 目标系统或执行范围：
 - 期望业务结果：
 - 不可改变要求：
-- 本次交付：
+- 本次交付（最小交付 + 按需追加）：
 - 明确不包含：
 - 已有 prompt 清单（如有）：
 - Skill 建议（与原始要求分开）：
@@ -41,7 +41,7 @@
 | 项目 | 分类 | 证据 | 影响 |
 | --- | --- | --- | --- |
 
-## 六项核心门禁
+## 七项核心门禁
 | 门禁 | 状态 | 证据 | 发现 |
 | --- | --- | --- | --- |
 
@@ -62,10 +62,19 @@
 - inspection-incomplete / inspection-blocked / inspection-failed / inspection-static-passed / awaiting-external-evaluation / external-failed / external-passed
 
 ## 后续入口
-- 补知识 / 启动 Revision / 补 eval / 核查运行时 / 外部评测
+- 补知识 / 启动 Prompt Revision / 另启 Eval Creation / 核查运行时 / 外部评测
 ```
 
 ## 3. 知识覆盖表
+
+```markdown
+## 检索范围与停止理由
+- 已读取范围（话题/资料/导航）：
+- 分层处理（必须读 / 只需知存在 / 明确无关 / 待定）：
+- 停止理由（覆盖维度齐全 / 无关键缺口 / 跨话题依赖已追踪 / 增量下降）：
+- 可能遗漏与判定依据：
+- 识别到的文件字段/命名/目录依据：
+```
 
 | 执行单元/候选 prompt | 信息维度 | 结论 | 来源与版本 | 适用范围 | 关键性 | 状态/缺口 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -91,7 +100,7 @@
 - 主线回归点：阶段 3 知识发现与覆盖
 ```
 
-需要交给不同责任方时，每项请求单独保存为 Markdown 文件，不只放在 Inspection 报告附录。
+需要交给不同责任方时，每项请求单独保存为 Markdown 文件，不只放在报告附录。
 
 ## 5. 运行时工程取证请求
 
@@ -107,18 +116,29 @@
 - 回填后重跑的门禁与静态检查：
 ```
 
-## 6. 六项核心门禁摘要
+## 6. 七项核心门禁摘要
 
-| 门禁 | 生产前信息来源 | 显式产物路径 | 状态 | 失败/警告/阻塞 | 回退阶段 |
-| --- | --- | --- | --- | --- | --- |
-| runtime-environment |  |  | pass/warning/blocked/fail |  |  |
-| execution-context |  |  | pass/warning/blocked/fail |  |  |
-| business-role |  |  | pass/warning/blocked/fail |  |  |
-| responsibility-visibility |  |  | pass/warning/blocked/fail |  |  |
-| attention-plan |  |  | pass/warning/blocked/fail |  |  |
-| knowledge-conflicts |  |  | pass/warning/blocked/fail |  |  |
+| 门禁 | 生产前信息来源 | 显式产物路径 | 对正式文件的约束 | 状态 | 失败/警告/阻塞 | 回退阶段 |
+| --- | --- | --- | --- | --- | --- | --- |
+| requirements-scope |  |  |  | pass/warning/blocked/fail |  |  |
+| runtime-environment |  |  |  | pass/warning/blocked/fail |  |  |
+| execution-context |  |  |  | pass/warning/blocked/fail |  |  |
+| business-role |  |  |  | pass/warning/blocked/fail |  |  |
+| responsibility-visibility |  |  |  | pass/warning/blocked/fail |  |  |
+| attention-plan |  |  |  | pass/warning/blocked/fail |  |  |
+| knowledge-conflicts |  |  |  | pass/warning/blocked/fail |  |  |
 
-六项详细产物分别使用下列字段。
+七项详细产物分别使用下列字段。
+
+### 需求先行与范围推导
+
+```markdown
+- 原始要求与目标：
+- 系统范围与不可改变要求：
+- 交付范围与明确排除：
+- prompt 清单来源（人员给定 / 目标驱动）：
+- 原始清单（若有，原样保留）：
+```
 
 ### Agent 运行环境说明
 
@@ -165,8 +185,8 @@
 
 ### 关键约束与注意力安排
 
-| 约束 | 影响 | 执行单元 | 主要归属 | 易失效时机/原因 | 注意力手段 | 注入方/时机 | 重复理由 | eval |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 约束 | 影响 | 执行单元 | 主要归属 | 易失效时机/原因 | 注意力手段 | 注入方/时机 | 重复理由 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 
 ### 知识疑点与冲突报告
 
@@ -177,7 +197,7 @@
 
 ## 7. prompt 候选清单与架构
 
-| ID | 类型 | 执行单元 | 加载时机 | 唯一职责 | 不承载内容 | 独立理由 | 所需知识/工具 | 对应 eval | 来源 | 置信度/待确认 |
+| ID | 类型 | 执行单元 | 加载时机 | 唯一职责 | 不承载内容 | 独立理由 | 所需知识/工具 | 文件字段/命名依据 | 来源 | 置信度/待确认 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 同时保存原始清单和 Skill 建议清单，避免建议覆盖需求。
@@ -189,6 +209,7 @@
 - 类型与执行单元：
 - 唯一职责：
 - 加载时机与 message role：
+- 文件字段/命名依据：
 - 输入和上下文契约：
 - 工具契约：
 - 输出契约：
@@ -198,16 +219,18 @@
 - 动态占位符及登记位置：
 - 来源映射：
 - 版本：
-- 对应 eval：
 - 单元校验状态：
 ```
 
-## 9. eval 单元规格
+## 9. eval 场景规格
+
+Eval 被测对象为完整 Agent 业务行为，独立从知识库推导，不以 prompt 为知识源。
 
 ```markdown
-# Eval Unit: <prompt-id>
-- 对应 prompt 与版本：
+# Eval Scenario: <id>
+- 被测 Agent 业务行为/系统能力：
 - 评测目标：
+- 跨越的执行单元/prompt/状态/工具/门禁/异常/回复流程：
 - 失败面：
 - 测试输入与前置状态：
 - 可验证项及黄金结果：
@@ -215,6 +238,7 @@
 - 一票否决项：
 - 工具/运行时证据要求：
 - 通过阈值：
+- 知识来源（独立于 prompt，评测目标 → 知识来源）：
 - 外部执行环境：
 - 当前状态：未执行 / 已执行
 - 结果证据路径：
@@ -222,10 +246,12 @@
 
 ## 10. 运行时集成契约
 
-| Prompt ID | 执行单元/触发 | role/顺序 | 动态变量、状态、历史 | 工具/schema | 输出/parser | anchor 钩子 | 异常路径 | prompt/schema/code/eval 版本 | 来源 |
+| Prompt ID | 执行单元/触发 | role/顺序 | 动态变量、状态、历史 | 工具/schema | 输出/parser | anchor 钩子 | 异常路径 | prompt/schema/code 版本 | 来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 ## 11. 外部评测交接包
+
+仅在 Eval Creation 完成、eval 准备执行时生成。
 
 ```markdown
 # External Evaluation Handoff
@@ -245,6 +271,7 @@
 ```markdown
 # Task Checkpoint
 - 原始任务标识与任务流程：
+- 任务流程：prompt-inspection / prompt-creation / prompt-revision / eval-creation
 - 当前主线阶段/状态：
 - 本阶段输入：
 - 已确认判断：
@@ -258,27 +285,37 @@
 ## 13. 最终交付清单
 
 ```markdown
-- [ ] prompts 与 evals 成对
-- [ ] 来源映射完整
-- [ ] 六项核心门禁产物完整且无关键失败
+Prompt 侧
+- [ ] prompts 完整，文件清单与知识库定义一一对应（无少文件/合并/多造/错目录/自行命名）
+- [ ] prompt 来源映射完整
+- [ ] 七项核心门禁产物完整且无关键失败
 - [ ] prompt 清单、职责、加载关系完整
 - [ ] 运行时集成契约完整
 - [ ] 静态校验报告完整
+- [ ] 运行时证据缺口按 warning/阻断分级诚实标注
+
+Eval 侧（由独立 Eval Creation 产生）
+- [ ] evals 完整，被测对象为完整 Agent 业务行为
+- [ ] eval 来源映射完整（独立于 prompt）
+- [ ] 场景按失败面覆盖
+
+整体
 - [ ] 外部评测证据状态真实
 - [ ] 非阻塞事项和回退位置已记录
-- [ ] 三个人工确认点有证据
+- [ ] 人工确认点有证据
 - 最终状态：
 ```
 
 ## 14. 机器校验清单 `prompt-package.json`
 
-把路径写成相对于该 JSON 所在目录的路径。来源在外部知识库时，使用相对于 `--knowledge-root` 的路径。
+把路径写成相对于该 JSON 所在目录的路径。来源在外部知识库时，使用相对于 `--knowledge-root` 的路径。Prompt 与 Eval 独立注册，不要求配对、数量相等或版本匹配。
 
 ```json
 {
-  "package_version": "1",
-  "delivery_status": "awaiting-external-evaluation",
+  "package_version": "2",
+  "delivery_status": "prompt-static-passed",
   "artifacts": {
+    "requirements_scope": "artifacts/requirements-scope.md",
     "runtime_environment": "artifacts/runtime-environment.md",
     "execution_context": "artifacts/execution-context.md",
     "business_role": "artifacts/business-role.md",
@@ -292,16 +329,67 @@
     "variables": ["event_summary"],
     "tools": ["example_tool"]
   },
-  "units": [
+  "prompt_units": [
     {
       "id": "example-task",
       "prompt": "prompts/example-task.md",
-      "eval": "evals/example-task.md",
+      "file_field": "gate/example",
       "version": "1.0.0",
-      "eval_version": "1.0.0",
       "tools": ["example_tool"],
+      "sources": ["topics/example/source.md"]
+    }
+  ],
+  "eval_scenarios": [
+    {
+      "id": "example-scenario",
+      "eval": "evals/example-scenario.md",
+      "scope": "完整 Agent 业务行为",
+      "version": "1.0.0",
       "sources": ["topics/example/source.md"]
     }
   ]
 }
+```
+
+## 15. Prompt Creation 最小交付：`prompt-production-basis.md`
+
+Prompt Creation 的核心过程产物，合并目标范围、正式文件清单、职责、命名依据、来源映射、运行时契约、概念绑定、知识冲突和用户裁定，避免重复落盘。
+
+```markdown
+# Prompt Production Basis
+- 目标与范围（含不可改变要求、明确排除）：
+- prompt 清单来源（人员给定 / 目标驱动）与原始清单：
+- 正式 prompt 文件清单（文件字段 / 命名依据 / 独立理由 / 是否合并及依据）：
+- 职责与信息可见性矩阵：
+- 运行时集成契约：
+- 概念引用绑定表：
+- 关键约束与注意力安排：
+- 七项门禁约束（每项对正式文件的具体约束）：
+- 知识冲突与用户裁定（含待回写项）：
+- 来源映射：
+- 检索范围与停止理由（引自知识覆盖）：
+```
+
+## 16. Prompt Creation 最小交付：`prompt-static-check.md`
+
+```markdown
+# Prompt Static Check
+- 确定性检查（文件/字段/占位符/工具名/schema/结构/数量）：
+- 静态集成检查（跨层冲突/变量/工具/上下游/异常/并行共享）：
+- 预期文件清单 ↔ 实际文件核对（少文件/合并文件/多造文件/错目录/自行命名）：
+- 运行时证据缺口（warning / 阻断分级）：
+- 七项门禁交付前倒查：
+- 状态与未决事项：
+```
+
+## 17. Eval Creation 最小交付：`eval-production-basis.md`
+
+```markdown
+# Eval Production Basis
+- 评测目标与被测 Agent 业务行为范围：
+- eval 场景清单（按业务场景与失败面拆分，数量不等于 prompt 数）：
+- 知识来源（独立于 prompt；评测目标 → 知识来源）：
+- rubric/judge 架构与一票否决：
+- 与 prompt 的理解差异/冲突标记（若有）：
+- 来源映射：
 ```

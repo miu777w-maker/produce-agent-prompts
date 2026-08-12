@@ -17,6 +17,7 @@
 4. `process-history/21-first-claude-execution-feedback-intake.md`：首次真实执行反馈归类；
 5. `process-history/22-inspection-subprotocol-design-v0.md`：Inspection 独立子协议；
 6. `process-history/23-task-workflow-separation-v0.md`：Inspection、Creation、Revision、Eval-only 分离原则。
+7. `process-history/29-v0-3-revision-checkpoint.md`：首次 Creation 复盘后的 v0.3 修订——Prompt/Eval 完全分离、七项核心门禁、文件边界与命名协议、定向检索停止协议。
 
 ## 设计脉络
 
@@ -26,6 +27,7 @@
 - `11`–`15`：六项核心门禁、代码边界、就绪审计和目标驱动清单发现；
 - `17`：正式文件结构；
 - `19`–`20`：初版审验中暂存的 inspection 范围/归因和知识补全产物问题。
+- `28`–`29`：首次真实 Creation 复盘（外部归档 28）与 v0.3 修订（29）；Prompt 与 Eval 完全分离，新增文件边界协议、定向检索停止协议和最小交付。
 
 ## 更新流程
 
