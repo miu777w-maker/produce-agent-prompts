@@ -3,12 +3,15 @@ name: prompt-creation
 description: 新建 prompt 体系(不产 eval)。从项目知识库独立推导 prompt 清单、职责、架构、运行时契约,逐文件生成。遵循共同七项原则(_shared/core-principles.md)。Prompt/Eval 独立生产。
 ---
 
-# Prompt Creation(原型骨架)
+# Prompt Creation
 
-新建 prompt 体系。**不生成 eval、不生成外部评测交接**。本文件是原型骨架;正式内容(七项详细判据、定向检索停止协议、artifact-boundaries、templates、完整状态机)在正式迁移时填入。
+新建 prompt 体系。**不生成 eval、不生成外部评测交接**。
 
 ## 共同原则
 遵循 `_shared/core-principles.md`。本流程的七项执行映射见下。
+
+## 本任务工具与授权
+只读知识库、可写 Prompt;不访问后端、不写知识库、不产 Eval。**保留 Prompt 元信息**(不自动删);**定向检索**(不默认扫描全库);**不以职责声明对冲 system/task 冲突**(冲突须修知识库 / 装配)。关键资料缺失则停止并提出补充请求。涉及外部访问 / 子 Agent 时读 `_shared/tool-permissions.md` 共同清单。
 
 ## 五步主流程
 1. **明确目标与范围**——目标 Agent/执行单元、范围、不可改变要求、清单来源(人员给定/目标驱动)。
@@ -22,20 +25,15 @@ description: 新建 prompt 体系(不产 eval)。从项目知识库独立推导 
 | 七项 | prompt-creation 具体执行 |
 | --- | --- |
 | 需求先行 | 目标 Agent/执行单元、范围、不可改变要求、清单来源 |
-| 运行环境 | prompt 声明的工具/消息/状态/输出/异常运行时是否真实可见 |
+| 运行环境 | 知识库是否有明确的运行时依据(工具/消息/状态/输出/异常);Prompt 是否忠实采用;缺依据则停止 + 补请求,**不写假定输入、不宣称已验证后端真实**(后端实证归 Runtime Validation) |
 | 上下文绑定 | prompt 中术语/概念在执行时机是否有真实注入来源 |
 | 业务背景 | 角色/目标/边界/语气是否忠实知识库 |
 | 职责与可见性 | 每个执行单元是否只看到必需信息;职责唯一;共享底座不吞并局部细节 |
 | 关键约束 | 高风险规则在有效载体/时机;anchor 有真实钩子和必要性 |
 | 知识错误 | prompt 是否误读/漂移/引入无来源规则 |
 
-## shared 按需读取(渐进披露,启动不全读)
+## shared 读取
 
-- 启动:`_shared/core-principles.md`(七项宪法)
-- 确定知识范围时:`_shared/knowledge-discovery.md`(正式迁移)
-- 确定文件/载体清单时:`_shared/artifact-boundaries.md`(正式迁移)
-- 处理运行时证据缺口时:`_shared/runtime-evidence.md`(正式迁移)
-- 确有跨责任方交接时(按需):`_shared/handoff.md`
-
-## 状态(原型占位)
-正式迁移时填入完整状态机。原型阶段:`design-not-ready` → `prompt-static-passed`(不产 eval)。
+- 启动:`_shared/core-principles.md`(七项宪法)+ 本任务工具与授权行。
+- 涉及外部访问 / 子 Agent 时:`_shared/tool-permissions.md` 共同清单。
+- 其余 `_shared/` 资料尚未建立;必要规则已在本流程五步与七项映射中。

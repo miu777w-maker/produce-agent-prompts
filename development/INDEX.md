@@ -1,5 +1,7 @@
 # Skill 设计与更新索引
 
+> **v0.4 更新(2026-08-13)**:本仓库已从“单 skill + references”转为 **plugin + `skills/` + `shared/`**。运行层入口是 `.claude-plugin/plugin.json` + `skills/<task>/SKILL.md`,**不再是根 `SKILL.md`(已删)或 `references/`(已弃用,见 `references/README.md`)**。最新结构、边界与下一步见 `process-history/43-repo-handoff-new-window.md` 与 `VERSION.md`。下文为 v0.3 时期的设计脉络与发布边界,保留作历史参考。
+
 本仓库根目录本身是可直接安装的 `produce-agent-prompts` Skill。运行文件包括：
 
 - `SKILL.md`：核心触发与工作流；

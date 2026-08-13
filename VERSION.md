@@ -1,26 +1,39 @@
-# Version 0.3.0
+# Version 0.4.0(试用 / pre-release)
 
-## Readiness
+> 状态:**试用版(pre-release)**。可进入真实任务试运行,**不宜标记为稳定发布版**。
+> 主语言变更:本版起 VERSION.md 改用中文,与运行层 / 过程历史一致(v0.3 为英文)。
 
-- Prompt Inspection: protocol updated to seven gates and prompt/eval separation; awaiting a new whole-system regression run under v0.3.
-- Prompt Creation: protocol restructured — prompt and eval production fully separated, minimal delivery + on-demand append, seven-gate closure, file-boundary/naming protocol, directed retrieval with stop protocol, confirmation points as hard gates; awaiting the first real production run under v0.3.
-- Prompt Revision: protocol updated; not yet validated end to end.
-- Eval Creation: newly independent track (evaluates full Agent business behavior, derives independently from the knowledge base); designed, not yet validated end to end.
-- External evaluation to `final-ready`: designed, not yet validated end to end.
+## Readiness(就绪度,如实)
 
-## V0.3 changes
+- **Prompt Creation**:可真实知识库试运行;未端到端验证。
+- **Agent Eval Creation**:可真实知识库试运行;**默认禁读 Prompt**;未端到端验证。
+- **Runtime Integration Validation**:原型,可受控试验(需用户四条件授权后端);未真跑。
+- **Prompt Inspection / Prompt Revision**:**占位未实现**(触发返回"流程未实现",不用通用能力临时完成)。
+- **测试**:7 条可执行 fixture(EX-01 / 02 / 03a / 03b / 04 / 05 / 06)就位,**尚未执行**。
+- **七项宪法**:编号已修正、清晰,为所有任务唯一宪法;不需增加。
 
-- Fully separated Prompt production and Eval production into independent tracks. Clarified that knowledge-base "synchronization" means project-phase synchronization, not production binding. Removed the per-unit prompt+eval co-generation rule across `SKILL.md`, `task-protocols.md`, `workflow-and-state.md`, `validation-and-external-handoff.md`, `artifact-templates.md` and the validator.
-- Added Eval Creation as an independent first-class track: the tested object is full Agent business behavior; evals derive independently from the knowledge base; scenario count is driven by business cases, not prompt count; no `eval → prompt` dependency.
-- Promoted "requirements-first and scope derivation" to the first of **seven** core gates (was six). Each gate must produce concrete constraints on final files and be reverse-checked before delivery; filling a table is no longer a pass.
-- Added the file-boundary and naming protocol: knowledge-base file fields default to independent physical files; no self-added prefixes or merges; an expected-vs-actual file checklist is required before delivery.
-- Added the directed-retrieval and stop protocol for large knowledge bases; full-library reads are no longer the default; retrieval scope, stop reason and possible omissions are recorded.
-- Confirmation points are now hard stage-transition gates, not optional communication.
-- Minimal delivery + on-demand append: Prompt Creation converges on `prompts/` + `prompt-production-basis.md` + `prompt-static-check.md` (+ optional `task-state.md`); extra Markdown is generated only via an on-demand confirmation gate when a concrete consumer exists.
-- Honest status: design assumptions cannot be marked `pass`; added `creation-revision-required` and `prompt-static-passed`; runtime-evidence gaps are split into blocking (business semantics) vs warning (engineering detail).
-- Stage-required references are now a mandatory pre-stage checklist, not "on-demand optional".
-- Validator (`package_version` 2): validates `prompt_units` and `eval_scenarios` independently; rejects the legacy paired `units` field; checks `file_field` uniqueness and status/eval-presence consistency.
+## v0.4 主要变化(相对 v0.3 单 skill + references)
+
+- **架构**:从单 skill + 7 references → **plugin 多 skill + 三层结构**。
+  - 多 skill:指挥官(`produce-agent-prompts`)+ 3 任务 skill(`prompt-creation` / `agent-eval-creation` / `runtime-integration-validation`)+ 2 占位(`prompt-inspection` / `prompt-revision`,未实现)。
+  - 三层:提示词层(`shared/core-principles.md` 七项权威)/ 执行策略层(各 `SKILL.md` 主流程)/ 工具授权层(`shared/tool-permissions.md` 共同清单)。
+- **Prompt / Eval 独立生产**:两条独立流程,各自从知识库推导;阶段同步 ≠ 生产绑定。
+- **权限自包含**:各 skill 写全本任务权限;**启动只读七项 + 本任务权限行**;仅外部访问 / 子 Agent / 权限疑点时读共同协议。
+- **agent-eval-creation 默认禁读 Prompt**:即使仓库内有 prompts 目录 / 文件也不主动读,除非用户明确强力要求(此时 KB 仍为唯一知识源)。
+- **删减轮 D1–D7**(依据审查"删比加重要"):去重复概念定义、删预建状态机、删未来迁移占位、删不存在的 `_shared` 引用、占位 skill 防假可用、Runtime 报告标注"有阻断 / 无阻断"(去状态机形式)。
+- **同步机制**:`scripts/sync-shared.py`(`shared/` → 各 skill `_shared/`;`sync` / `check`)。
+- **可执行测试**:`tests/fixtures/` 7 fixture(11 字段、二元判据、通用场景,不写死项目字段)。
+
+## 不在 v0.4(维持现状 / 不预建)
+
+- `references/`(v0.3 旧,**不在 v0.4 加载路径**,不双轨维护)。
+- 旧四态状态机(已删 / 降级为报告标注)。
+- 不全量迁移旧 references 判据(真实缺口出现时补最小规则,不预告迁入旧体系)。
+- 不新增原则 / 层 / 状态机(审查叫停)。
 
 ## Evidence
 
-See `development/process-history/29-v0-3-revision-checkpoint.md`. The revision is based on the first real Creation retrospective (external archive `28-v0-2-creation-retrospective-and-next-session-handoff.md`), the Creation execution handoff, the original task input, and the user's in-session rulings.
+- 删减与测试:`development/process-history/39-executable-regression-tests.md` ~ `42-d7-closure-implementation.md`。
+- 仓库交接(最新):`development/process-history/43-repo-handoff-new-window.md`。
+- 上一份交接:`38-handoff-before-context-compaction.md`。
+- v0.3 基线:外部 archives `29-v0-3-revision-checkpoint.md`。
