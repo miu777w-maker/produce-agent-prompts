@@ -1,0 +1,8 @@
+{
+  "name": "produce-agent-prompts",
+  "description": "Produce traceable, runtime-integrable, evaluable Agent prompts, evals, and rubrics from a project knowledge base. Skills route directly (no commander); each loads once per task, with a per-turn guard reminder surviving context compaction. Prompt production and Eval production are independent tracks.",
+  "version": "0.5.0",
+  "author": {
+    "name": "wangmiao"
+  }
+}

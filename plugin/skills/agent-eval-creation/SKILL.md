@@ -1,0 +1,43 @@
+---
+name: agent-eval-creation
+description: 从知识库独立推导,生成评测完整 Agent 业务行为的评测场景。当用户想要"生成评测/评测场景/test scenarios/检验 Agent 业务行为"时使用。默认禁止读取 Prompt 文件(即使仓库内有),除非用户明确强力要求;不修改 prompt。以七项对应信息为 Agent 事实完整性检查,不机械执行七项写作检查;需要评分细则时条件调用 agent-rubric-creation(skill 间直调)。也承担"新建或修订整体 Eval"入口。Prompt/Eval 独立生产。
+hooks:
+  UserPromptSubmit:
+    - hooks:
+        - type: command
+          command: "${CLAUDE_PLUGIN_ROOT}/skills/agent-eval-creation/scripts/guard-principles.sh"
+---
+
+# Agent Eval Creation
+
+评测**完整 Agent 业务行为**(非 prompt 文件)。独立从知识库推导。**默认禁止读取 Prompt 文件**(即使仓库内有 prompts 目录 / 文件也不主动读);除非用户明确强力要求,才在授权下读,且**知识库仍为唯一知识源**。不修改 prompt。一个 eval 场景可跨多 prompt/状态/工具/门禁/异常/回复流程;场景数来自业务,非 prompt 数。需要评分细则时条件调用 `agent-rubric-creation`(见"何时调用 Rubric")。本 skill 也承担 Eval 修订入口(新建或修订整体 Eval)。
+
+## 事实基础(不用七项写作检查)
+
+本 skill **不机械执行"Prompt 七项写作检查"**——不评价 Prompt 写作质量。但评测场景须以 **Agent 事实**为依据:七项对应信息(`${CLAUDE_PLUGIN_ROOT}/shared/core-principles.md`)仅作为**事实完整性检查**(运行环境、上下文、业务角色、职责、关键约束、知识疑点、需求范围),**只读取与当前评测对象有关的事实,不要求每项都形成场景**;事实内容一律**从知识库检索**取得。
+
+## 本任务工具与授权
+只读知识库、可写 Eval;不访问后端、不写知识库。**默认禁止读取 Prompt 文件**(即使仓库内有也不主动读);**除非用户明确强力要求**,才在授权下读取,且**知识库为唯一知识源**——不以 Prompt 复制 / 降低 / 缩窄评测,Prompt 与 KB 冲突时标记冲突而非迁就。涉及外部访问 / 子 Agent 时读 `${CLAUDE_PLUGIN_ROOT}/shared/tool-permissions.md` 共同清单。
+
+## 主流程(Eval 侧)
+1. **明确评测目标与被测 Agent 行为范围**——评测什么 Agent、哪些能力、哪些场景。
+2. **独立从知识库检索评测依据**——**默认不读 Prompt 文件**(即使仓库内有);用户明确强力要求时才在授权下读,且 KB 为唯一依据。
+3. **设计评测场景覆盖失败面**——正常/边界/模糊/冲突/缺失/工具/对抗/长对话/组合/上下游;场景数来自业务,非 prompt 数。
+4. **逐场景生成 eval**——不为迎合 prompt 而复制/降低/缩窄;与 prompt 理解不同时标记冲突而非迁就。
+5. **倒查交付**——场景是否覆盖目标失败面、评价依据是否完整(事实完整性检查)、是否忠于 KB;eval 就绪时条件生成外部评测交接。
+
+## 何时调用 Rubric
+
+- 用户**只要求 Eval 场景**时,只生成 Eval;
+- 用户要求**完整评测材料**,或知识库规定 Eval 必须配评分细则时,**条件调用 `agent-rubric-creation`**(通过 Skill 工具直接调用);
+- 调用时传:被评对象、业务目标、场景所需评价范围、知识库依据位置;
+- **不把 Eval 临时写出的判断当作 Rubric 的知识依据**;Rubric 仍须从知识库独立确认事实。
+
+## Eval 修订入口
+本 skill 承担"新建或修订整体 Eval"。Prompt Revision 发现变更影响 Eval 时,**只记录 Eval 重新评估需求并交回本 skill**,不在 Prompt Revision 中直接修改 Eval(除非用户另行启动并授权)。
+
+## shared 读取
+
+- 启动:`${CLAUDE_PLUGIN_ROOT}/shared/core-principles.md`(七项对应信息作为事实完整性检查)+ 本任务工具与授权行。
+- 涉及外部访问 / 子 Agent 时:`${CLAUDE_PLUGIN_ROOT}/shared/tool-permissions.md` 共同清单。
+- 每轮 UserPromptSubmit 自动注入压缩版 reminder(guard 脚本),上下文压缩后仍生效;完整流程以本 SKILL.md 为准。

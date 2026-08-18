@@ -1,8 +1,0 @@
-{
-  "name": "produce-agent-prompts",
-  "description": "Produce traceable, runtime-integrable, evaluable Agent prompts and evals from a project knowledge base. Commander routes to task skills (prompt-creation, agent-eval-creation; inspection/revision on full migration). Prompt production and Eval production are independent tracks.",
-  "version": "0.4.0",
-  "author": {
-    "name": "wangmiao"
-  }
-}

@@ -1,6 +1,6 @@
 # Produce Agent Prompts
 
-> **v0.4.0(试用 / pre-release)**
+> **v0.5.0(试用 / pre-release)**
 >
 > 一套 Claude Code / Codex skill,从一个项目知识库出发,稳定生产**可追溯、可接入运行时、可评测**的 Agent **Prompt / Eval / Rubric**。
 
@@ -14,17 +14,18 @@
 
 ## 包含的 skill
 
+各 skill 直连使用(无指挥官路由层),一次任务只加载一份 SKILL.md:
+
 | Skill | 做什么 | 状态 |
 | --- | --- | --- |
-| `produce-agent-prompts` | 指挥官:按你的意图路由到对应任务 | 可用 |
 | `prompt-creation` | 新建 Prompt 体系(从知识库独立推导) | 可试运行 |
 | `agent-eval-creation` | 生成评测场景(完整 Agent 业务行为;**默认不读 Prompt**) | 可试运行 |
-| `agent-rubric-creation` | 生成评分细则(可观察、可打分、正交) | 待首次真实试运行 |
+| `agent-rubric-creation` | 生成评分细则(可观察、可打分、正交;可独立用,也可由 Eval 条件调用) | 待首次真实试运行 |
 | `runtime-integration-validation` | 后端运行时校验(预期 vs 实际,**只读只报告**) | 原型 |
 | `prompt-inspection` | 检查已有 Prompt(只报告) | 占位·未实现 |
 | `prompt-revision` | 改写已有 Prompt | 占位·未实现 |
 
-启用 `produce-agent-prompts`(指挥官),告诉它你要做什么,它会路由到对应任务 skill。
+直接说你要做什么("新建 prompt""生成评测""生成评分细则"),Claude Code 按各 skill 的 description 自动路由;也可 `/produce-agent-prompts:<skill>` 显式调用。
 
 ## 核心理念
 
@@ -37,32 +38,66 @@
 
 → 详见 [`PROJECT_CONSTITUTION.md`](./PROJECT_CONSTITUTION.md)(最高指令,修改 / 评审本仓库前必读)。
 
+## 加载架构(v0.5)
+
+为避免同一次任务多次加载 skill、以及上下文压缩后反复重载:
+
+- **无指挥官**:直连任务 skill,一次任务只加载一份 SKILL.md;
+- **单源 shared**:共享事实与授权协议只在 `plugin/shared/` 一份,各 skill 经 `${CLAUDE_PLUGIN_ROOT}` 引用,零复制;
+- **guard reminder**:每个已实现 skill 配 UserPromptSubmit hook,每轮注入压缩版要点(七项 + 流程摘要 + 权限),**上下文压缩后仍生效**,无需重载 SKILL.md;
+- **标准插件分发**:marketplace + plugin 结构,一条命令安装 / 更新。
+
 ## 安装
 
-### Claude Code
+本仓库同时是 **marketplace** 和 **plugin**(结构同 cowork):
+
+```
+produce-agent-prompts/           marketplace 根
+├── .claude-plugin/
+│   └── marketplace.json         source 指向 ./plugin
+└── plugin/                      实际分发的 plugin bundle
+    ├── .claude-plugin/plugin.json
+    ├── shared/                  共享事实 + 授权协议(单一权威源)
+    └── skills/                  6 个 skill(各含 SKILL.md;已实现的含 scripts/guard-principles.sh)
+```
+
+### Claude Code(marketplace 安装)
+
+```
+/plugin marketplace add https://github.com/miu777w-maker/produce-agent-prompts.git
+/plugin install produce-agent-prompts@produce-agent-prompts-market
+```
+
+更新:`/plugin marketplace update produce-agent-prompts-market`。
+
+> **务必用 git 仓库地址添加**,不要用指向 marketplace.json 的裸 URL(裸 URL 只下载清单,相对路径 `./plugin` 指向的文件不会被下载)。
+>
+> 公司内网可用 GitLab 镜像:`http://gitlab.eidtokencloud.com/wangmiao/produce_agent_prompts`
+
+### 本地开发加载
 
 ```bash
 git clone https://github.com/miu777w-maker/produce-agent-prompts.git
 cd produce-agent-prompts
-
-# 把 7 个 skill 复制到 Claude Code 的 skills 目录
-rsync -a skills/ ~/.claude/skills/
+claude --plugin-dir ./plugin
 ```
 
-重开会话,Claude Code 即发现这些 skill。
+修改后 `/reload-plugins` 热加载。校验:
 
-> 公司内网可用 GitLab 镜像:`http://gitlab.eidtokencloud.com/wangmiao/produce_agent_prompts`
+```bash
+claude plugin validate .          # 校验 marketplace
+claude plugin validate ./plugin   # 校验 plugin
+```
 
 ### Codex / 其他宿主
 
-参考 [`agents/openai.yaml`](./agents/openai.yaml);把 `skills/*/` 各自放到对应宿主的 skill 加载路径。本仓库宿主无关(没有 rsync / git push 等宿主特定操作写进 skill)。
+参考 [`agents/openai.yaml`](./agents/openai.yaml);把 `plugin/skills/*/` 各自放到对应宿主的 skill 加载路径,`plugin/shared/` 一并放置并保持相对结构。本仓库宿主无关。
 
 ## 使用
 
 1. 在你的项目(有知识库的)目录开 Claude Code 会话。
-2. 触发 `produce-agent-prompts`。
-3. 说你要做什么:**新建 Prompt / 生成评测 / 生成评分细则 / 后端运行时校验**。
-4. 它路由到对应 skill,按方法从你的知识库推导产出。
+2. 说你要做什么:**新建 Prompt / 生成评测 / 生成评分细则 / 后端运行时校验**。
+3. 对应 skill 被直接触发,按方法从你的知识库推导产出。
 
 它会:定向读知识库 → 缺关键资料就停下问你 → 按知识库规定的名称 / 拆分产出 → 七类事实倒查。
 
@@ -72,15 +107,14 @@ rsync -a skills/ ~/.claude/skills/
 PROJECT_CONSTITUTION.md   最高指令(改 / 评仓库前必读)
 AGENTS.md / CLAUDE.md     入口(指向 CONSTITUTION)
 VERSION.md                版本与就绪度
-skills/                   7 个 skill(各含 SKILL.md + _shared/)
-shared/                   共享事实(core-principles)+ 工具授权(tool-permissions)
-scripts/                  sync-shared.py(同步 _shared)、validate_prompt_package
+.claude-plugin/           marketplace 清单
+plugin/                   plugin bundle(skills + shared)
+scripts/                  validate_prompt_package(产物 manifest 校验,与加载架构无关)
 agents/                   平台适配(Codex)
-.claude-plugin/           plugin 元数据
 ```
 
 历史归档(v0.3 references、开发过程、可执行测试 fixture)在 `archive/development-history` 分支,不在主分支出现,也不进任务上下文。
 
 ## 状态
 
-**v0.4.0(试用 / pre-release)**——Prompt / Eval / Rubric 可进真实知识库试运行;Runtime 可受控试验;Inspection / Revision 占位未实现。成熟度与未覆盖范围详见 [`VERSION.md`](./VERSION.md)。
+**v0.5.0(试用 / pre-release)**——Prompt / Eval / Rubric 可进真实知识库试运行;Runtime 可受控试验;Inspection / Revision 占位未实现。成熟度与未覆盖范围详见 [`VERSION.md`](./VERSION.md)。

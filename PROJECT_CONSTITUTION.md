@@ -129,12 +129,14 @@ Prompt、Eval 和 Rubric 可以在同一项目阶段同步形成,但**生产流�
 
 每次任务只加载:
 
-1. 当前任务 Skill;
-2. 当前任务需要的共享事实定义;
+1. 当前任务 Skill(**用户直连任务 Skill,不经过指挥官/路由层;一次任务只加载一份 SKILL.md**);
+2. 当前任务需要的共享事实定义(`plugin/shared/` 单一权威源,经 `${CLAUDE_PLUGIN_ROOT}` 引用,不复制到各 Skill);
 3. 当前任务权限;
 4. 当前阶段必要的知识库内容。
 
 **不得**因为仓库中存在其他 Skill、tests、历史或旧 references,就自动读取它们。
+
+**上下文压缩后的稳定性**:各已实现 Skill 通过 UserPromptSubmit guard 脚本每轮注入压缩版 reminder(七项要点 + 本任务流程摘要 + 权限行),使其在上下文压缩后仍持续生效;**不得因压缩丢失而重新加载 SKILL.md 或重复加载其他 Skill**。
 
 - Prompt Creation 不加载 Eval、Rubric 或 Runtime 流程;
 - Eval Creation 不加载 Prompt 写作流程;

@@ -1,4 +1,4 @@
 interface:
   display_name: "Agent Prompt Producer"
   short_description: "Build and validate knowledge-grounded Agent prompt systems"
-  default_prompt: "Use $produce-agent-prompts to derive and produce the prompts and evals needed for this Agent system from its project knowledge base."
+  default_prompt: "Use $prompt-creation to derive and produce the prompts needed for this Agent system from its project knowledge base; use $agent-eval-creation for eval scenarios, $agent-rubric-creation for rubrics, and $runtime-integration-validation for backend runtime checks."
